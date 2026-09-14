@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WhatsApp Onboarding Model for Multiple Clinics</title>
+<style>
+@page { size: A4; margin: 1.8cm 1.8cm 1.6cm; }
+body { font-family: Arial, sans-serif; color: #1f2933; font-size: 10.5pt; line-height: 1.35; }
+h1 { color: #075e54; font-size: 21pt; margin: 0 0 4pt; }
+h2 { color: #075e54; font-size: 14pt; margin: 14pt 0 5pt; border-bottom: 1px solid #cfe8e4; padding-bottom: 2pt; }
+h3 { color: #128c7e; font-size: 11.5pt; margin: 10pt 0 3pt; }
+p { margin: 4pt 0 7pt; }
+ul, ol { margin: 3pt 0 7pt 20pt; padding: 0; }
+li { margin: 2pt 0; }
+.meta { color: #52616b; font-size: 9pt; margin-bottom: 12pt; }
+.answer { color: #1f2933; padding: 3pt 0; margin: 8pt 0 12pt; }
+.decision { color: #1f2933; padding: 3pt 0; }
+.warning { color: #5d4700; padding: 3pt 0; }
+.sources { font-size: 8.5pt; color: #40505a; }
+a { color: #075e54; text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>WhatsApp Onboarding Model for Multiple Clinics</h1>
+<div class="meta">Brief decision note &nbsp;|&nbsp; 7 September 2026 &nbsp;|&nbsp; India-focused operating context</div>
+
+<h2>Executive answer</h2>
+<div class="answer"><b>Do not use one provider-owned WhatsApp number/WABA as the sender for multiple independent clinics.</b> Our software may serve many clinics, but each clinic should have its own WhatsApp Business Account (WABA), business identity and phone number, while granting our system authorized access.</div>
+
+<h2>Why the shared-number approach will not work</h2>
+<ul>
+<li><b>Meta requires client-specific accounts.</b> Its service-provider terms make the provider responsible for creating a WABA for each client. A pre-created WABA also cannot be held for a future client without Meta's written consent.</li>
+<li><b>The sender identity becomes misleading.</b> WhatsApp requires accurate profile information and prohibits impersonation or misrepresenting affiliation. One number cannot cleanly present several unrelated clinic identities.</li>
+<li><b>Patient consent is clinic-specific.</b> The sender must possess the patient's number and valid opt-in. Consent given to Clinic A should not be treated as consent to Clinic B or to a generic platform.</li>
+<li><b>Health data requires strict separation.</b> Clinic chats may contain sensitive information. A shared asset increases cross-clinic disclosure risk and complicates access control, audit, deletion and offboarding.</li>
+<li><b>One failure affects everyone.</b> Complaints, low quality, policy violations, payment issues or restrictions on the shared account could interrupt all clinics.</li>
+<li><b>Ownership and exit become difficult.</b> Meta's terms require a provider to help a client take control of or transfer its WABA. Separate WABAs make portability possible.</li>
+</ul>
+
+<h2>Available compliant options</h2>
+<h3>1. Embedded Signup — recommended for scale</h3>
+<p>Integrate Meta's Embedded Signup. Each clinic signs in, selects or creates its own Meta Business Portfolio and WABA, registers its phone number, accepts the terms, and grants our app permissions. Our system then stores the clinic's WABA ID and phone-number ID and operates as its authorized technology provider.</p>
+<p><b>Needs:</b> appropriate Meta app setup, business verification where requested, App Review/advanced permissions, secure tokens, webhooks, billing setup and tenant-level data isolation.</p>
+
+<h3>2. Guided manual onboarding — best for an early/local pilot</h3>
+<ol>
+<li>Help the clinic create or use its own Meta Business Portfolio.</li>
+<li>Create its own WABA and register a clinic-controlled phone number.</li>
+<li>Complete business details/verification and accept Meta/WhatsApp terms.</li>
+<li>Add payment details where required.</li>
+<li>Authorize our app or an approved provider using Meta's supported onboarding or partner-access flow.</li>
+<li>Record that clinic's WABA ID and phone-number ID against its tenant.</li>
+</ol>
+<p>The clinic should retain control of its number/SIM, legal identity and primary assets. We should never collect passwords or take permanent ownership unnecessarily.</p>
+
+<h3>3. A genuine Meta partner/BSP — valid if verified</h3>
+<p>A legitimate Solution Partner or Tech Provider can onboard a clinic and obtain authorized access to its WABA. Requesting a WABA ID or Business Portfolio ID can be normal. However, a claim that screenshots will be sent to Meta is <b>not by itself an official authorization mechanism</b>.</p>
+<p>Verify the provider in Meta's official partner directory, require the exact Meta flow and permissions, and ensure the clinic approves access through a Meta-hosted login, Embedded Signup or Business Manager request. The contract should cover data processing, security, fees, ownership, export and offboarding.</p>
+<div class="warning"><b>Red flags:</b> relying only on badges or screenshots; asking for passwords, OTPs or recovery codes; using one WABA for unrelated clinics; or refusing to return/transfer the clinic's assets. A screenshot may support a Meta support ticket, but it does not replace clinic consent or Meta-issued permissions.</div>
+
+<h2>Decision</h2>
+<div class="decision">Adopt a <b>one clinic → one WABA → one clinic identity</b> architecture. Use guided manual onboarding for the pilot, then implement Embedded Signup for scale. A verified Meta partner can accelerate onboarding but is not an exception to client-specific WABAs and formal authorization.</div>
+
+<h2>Sources</h2>
+<div class="sources">
+<ol>
+<li><a href="https://www.whatsapp.com/legal/meta-terms-whatsapp-business">Meta Terms for WhatsApp Business</a>, Meta, last modified 15 Oct 2025.</li>
+<li><a href="https://www.whatsapp.com/legal/business-terms-for-service-providers">WhatsApp Business Terms for Service Providers</a>, WhatsApp, last modified 12 Jun 2018.</li>
+<li><a href="https://whatsappbusiness.com/policy/">WhatsApp Business Messaging Policy</a>, accessed 7 Sep 2026.</li>
+<li><a href="https://www.postman.com/meta/whatsapp-business-platform/documentation/du6gzjv/embedded-signup">Embedded Signup documentation</a>, official Meta collection hosted by Postman, accessed 7 Sep 2026.</li>
+<li><a href="https://www.facebook.com/business/partner-directory/search">Meta official partner directory</a>.</li>
+</ol>
+<p><i>Important nuance:</i> Meta permits authorized providers to operate APIs on behalf of clients. The problem is not serving multiple clinics; it is presenting unrelated clinics through one provider-owned identity/account instead of maintaining a WABA per client. No official source reviewed describes screenshot submission alone as a substitute for authorization.</p>
+</div>
+</body>
+</html>

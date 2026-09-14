@@ -1,0 +1,338 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageStatus {
+  RECEIVED
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum TemplateStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  PAUSED
+  DISABLED
+}
+
+enum AutomationActionType {
+  MESSAGE
+  TEMPLATE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("AGENT")
+  active       Boolean  @default(true)
+  assignedConversations Conversation[] @relation("ConversationAssignee")
+  claimedConversations Conversation[] @relation("ConversationClaimant")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Contact {
+  id            String         @id @default(cuid())
+  waId          String         @unique
+  phone         String
+  profileName   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  conversations Conversation[]
+  patient       Patient?
+  appointments  Appointment[]
+  nativeFlowSessions WhatsAppFlowSession[]
+  audiences     AudienceContact[]
+}
+
+model Audience {
+  id        String            @id @default(cuid())
+  name      String
+  members   AudienceContact[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model AudienceContact {
+  audienceId String
+  audience   Audience @relation(fields: [audienceId], references: [id], onDelete: Cascade)
+  contactId  String
+  contact    Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@id([audienceId, contactId])
+  @@index([contactId])
+}
+
+model Conversation {
+  id                    String    @id @default(cuid())
+  contactId             String
+  contact               Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  lastCustomerMessageAt DateTime?
+  lastMessageAt         DateTime  @default(now())
+  archivedAt            DateTime?
+  closedAt              DateTime?
+  unreadCount           Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  messages              Message[]
+  appointmentFlow       AppointmentFlow?
+  nativeFlowSessions    WhatsAppFlowSession[]
+  assigneeId            String?
+  assignee              User?     @relation("ConversationAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  claimedById           String?
+  claimedBy             User?     @relation("ConversationClaimant", fields: [claimedById], references: [id], onDelete: SetNull)
+
+  @@index([contactId])
+  @@index([lastMessageAt])
+  @@index([archivedAt, closedAt])
+  @@index([assigneeId])
+  @@index([claimedById])
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  metaMessageId  String?          @unique
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  type           String           @default("text")
+  body           String?
+  replyId        String?
+  status         MessageStatus
+  templateName   String?
+  templateLanguage String?
+  templateComponents Json?
+  templateParameters Json?
+  errorMessage   String?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+enum AppointmentFlowStep {
+  AWAITING_NAME
+  AWAITING_AGE
+  AWAITING_ID_LAST4
+  AWAITING_SLOT
+}
+
+model WhatsAppFlow {
+  id               String   @id @default(cuid())
+  metaFlowId       String?  @unique
+  name             String
+  categories       Json
+  flowJson         Json
+  endpointMode     String   @default("NONE")
+  endpointUri      String   @default("")
+  status           String   @default("LOCAL_DRAFT")
+  revision         Int      @default(1)
+  syncedRevision   Int?
+  validationErrors Json     @default("[]")
+  remoteDetails    Json     @default("{}")
+  operationToken   String?
+  operationUntil   DateTime?
+  sessions         WhatsAppFlowSession[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model WhatsAppFlowSession {
+  id             String       @id @default(cuid())
+  tokenHash      String       @unique
+  flowId         String
+  flow           WhatsAppFlow @relation(fields: [flowId], references: [id], onDelete: Restrict)
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  contactId      String
+  contact        Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  expiresAt      DateTime
+  selection      Json?
+  result         Json?
+  completedAt    DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([expiresAt])
+  @@index([conversationId])
+}
+
+model Patient {
+  id            String        @id @default(cuid())
+  contactId     String        @unique
+  contact       Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  name          String
+  age           Int
+  idLast4       String
+  appointments  Appointment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model AppointmentFlow {
+  id             String              @id @default(cuid())
+  conversationId String              @unique
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  step           AppointmentFlowStep
+  name           String?
+  age            Int?
+  idLast4        String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+}
+
+model AppointmentSlot {
+  id          String       @id @default(cuid())
+  startsAt    DateTime     @unique
+  appointment Appointment?
+  createdAt   DateTime     @default(now())
+
+  @@index([startsAt])
+}
+
+model Appointment {
+  id          String          @id @default(cuid())
+  reference   String          @unique
+  slotId      String          @unique
+  slot        AppointmentSlot @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  patientId   String
+  patient     Patient         @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  contactId   String
+  contact     Contact         @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  createdAt   DateTime        @default(now())
+
+  @@index([patientId])
+  @@index([contactId])
+}
+
+model MessageTemplate {
+  id             String         @id @default(cuid())
+  metaTemplateId String?        @unique
+  name           String
+  language       String
+  category       String
+  status         TemplateStatus @default(DRAFT)
+  components     Json
+  parameterLabels Json?
+  rejectionReason String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  automationFlows AutomationFlow[]
+
+  @@unique([name, language])
+}
+
+model AutomationFlow {
+  id               String               @id @default(cuid())
+  name             String
+  trigger          String
+  enabled          Boolean              @default(true)
+  actionType       AutomationActionType
+  messageBody      String?
+  templateId       String?
+  template         MessageTemplate?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  parameterMappings Json?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([trigger, enabled])
+  @@index([templateId])
+}
+
+model AutomationTrigger {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  fields      Json
+  system      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WhatsAppConnection {
+  id                 String    @id @default(cuid())
+  label              String
+  metaBusinessId     String?
+  metaBusinessName   String?
+  wabaId             String
+  wabaName           String?
+  phoneNumberId      String    @unique
+  displayPhoneNumber String?
+  verifiedName       String?
+  profileAbout       String?
+  profileAddress     String?
+  profileDescription String?
+  profileEmail       String?
+  profilePictureUrl  String?
+  profileWebsites    String[]  @default([])
+  profileVertical    String?
+  tokenCiphertext    String?
+  tokenIssuedAt      DateTime?
+  tokenExpiresAt     DateTime?
+  status             String    @default("PENDING")
+  errorMessage       String?
+  connectedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([wabaId])
+  @@index([status])
+}
+
+model HostedSignupRequest {
+  id            String    @id @default(cuid())
+  label         String
+  pinCiphertext String
+  status        String    @default("PENDING")
+  wabaId        String?
+  metaBusinessId String?
+  errorMessage  String?
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([status, createdAt])
+}
+
+model MetaWebhookEvent {
+  id            String    @id @default(cuid())
+  deliveryKey   String?   @unique
+  object        String?
+  entryId       String?
+  field         String
+  event         String?
+  wabaId        String?
+  phoneNumberId String?
+  payload       Json
+  status        String    @default("RECEIVED")
+  errorMessage  String?
+  receivedAt    DateTime  @default(now())
+  processedAt   DateTime?
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime?
+
+  @@index([field, receivedAt])
+  @@index([event, receivedAt])
+  @@index([wabaId])
+  @@index([phoneNumberId])
+  @@index([status])
+  @@index([status, nextAttemptAt])
+}

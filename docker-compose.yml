@@ -1,0 +1,65 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-relay_whatsapp}
+      POSTGRES_USER: ${POSTGRES_USER:-relay_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-relay_local_2026}
+    ports:
+      - "5432:5432"
+    volumes:
+      - relay_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-relay_app}:${POSTGRES_PASSWORD:-relay_local_2026}@db:5432/${POSTGRES_DB:-relay_whatsapp}?schema=public
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      JWT_SECRET: ${JWT_SECRET:-relay-local-development-secret-change-me}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@relay.local}
+      ADMIN_NAME: ${ADMIN_NAME:-Relay Admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
+      WHATSAPP_BUSINESS_ACCOUNT_ID: ${WHATSAPP_BUSINESS_ACCOUNT_ID}
+      META_APP_SECRET: ${META_APP_SECRET}
+      META_APP_ID: ${META_APP_ID}
+      META_HOSTED_SIGNUP_URL: ${META_HOSTED_SIGNUP_URL}
+      META_EMBEDDED_SIGNUP_CONFIG_ID: ${META_EMBEDDED_SIGNUP_CONFIG_ID:-}
+      META_SYSTEM_TOKEN: ${META_SYSTEM_TOKEN}
+      META_TOKEN_ENCRYPTION_KEY: ${META_TOKEN_ENCRYPTION_KEY}
+      META_GRAPH_API_VERSION: ${META_GRAPH_API_VERSION:-v26.0}
+      APPOINTMENT_TIMEZONE: ${APPOINTMENT_TIMEZONE:-Asia/Kolkata}
+      WHATSAPP_FLOW_ENDPOINT_URL: ${WHATSAPP_FLOW_ENDPOINT_URL:-}
+      WHATSAPP_FLOW_PRIVATE_KEY: ${WHATSAPP_FLOW_PRIVATE_KEY:-}
+      WHATSAPP_FLOW_KEY_PASSPHRASE: ${WHATSAPP_FLOW_KEY_PASSPHRASE:-}
+    expose:
+      - "3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  relay_postgres_data:
