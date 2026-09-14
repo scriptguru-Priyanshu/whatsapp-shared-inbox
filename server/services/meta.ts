@@ -12,7 +12,7 @@ export function metaFetch(path: string, init: RequestInit = {}) {
     signal: AbortSignal.timeout(30000),
     ...init,
     headers: {
-      Authorization: `Bearer ${required('WHATSAPP_ACCESS_TOKEN')}`,
+      Authorization: `Bearer ${required('META_SYSTEM_TOKEN')}`,
       'Content-Type': 'application/json',
       ...init.headers,
     },

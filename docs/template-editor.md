@@ -27,7 +27,7 @@ Templates requiring delivery media or other interactive values are excluded from
 
 ## Configuration and upload behavior
 
-Configure `META_APP_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, and `META_GRAPH_API_VERSION` on the backend. The access token needs the appropriate business-management and messaging permissions. Catalogs must be connected and published Flows must belong to the account.
+Configure `META_APP_ID`, `META_SYSTEM_TOKEN`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_PHONE_NUMBER_ID`, and `META_GRAPH_API_VERSION` on the backend. The system token needs the appropriate business-management and messaging permissions. Catalogs must be connected and published Flows must belong to the account.
 
 * `POST /api/templates/validate`: validate/build a template without submitting it.
 * `POST /api/templates/media/example`: multipart `file`; resumable upload, returns a review `handle`.

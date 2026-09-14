@@ -46,7 +46,7 @@ async function result(response: Response, key: string) {
 }
 export async function uploadReviewSample(file: Express.Multer.File, fetcher: typeof fetch = fetch) {
   const base = `https://graph.facebook.com/${process.env.META_GRAPH_API_VERSION || 'v26.0'}`
-  const token = required('WHATSAPP_ACCESS_TOKEN')
+  const token = required('META_SYSTEM_TOKEN')
   const query = new URLSearchParams({ file_length: String(file.size), file_type: file.mimetype, file_name: file.originalname })
   const id = await result(await fetcher(`${base}/${required('META_APP_ID')}/uploads?${query}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(30000) }), 'id')
   if (!id.startsWith('upload:')) throw new Error('Meta returned an invalid upload session')
@@ -60,6 +60,6 @@ export async function uploadMessageMedia(file: Express.Multer.File) {
   form.set('messaging_product', 'whatsapp')
   form.set('type', file.mimetype)
   form.set('file', await openAsBlob(file.path, { type: file.mimetype }), file.originalname)
-  return result(await fetch(`https://graph.facebook.com/${process.env.META_GRAPH_API_VERSION || 'v26.0'}/${required('WHATSAPP_PHONE_NUMBER_ID')}/media`, { method: 'POST', headers: { Authorization: `Bearer ${required('WHATSAPP_ACCESS_TOKEN')}` }, body: form, signal: AbortSignal.timeout(120000) }), 'id')
+  return result(await fetch(`https://graph.facebook.com/${process.env.META_GRAPH_API_VERSION || 'v26.0'}/${required('WHATSAPP_PHONE_NUMBER_ID')}/media`, { method: 'POST', headers: { Authorization: `Bearer ${required('META_SYSTEM_TOKEN')}` }, body: form, signal: AbortSignal.timeout(120000) }), 'id')
 }
 export const removeUpload = (file?: Express.Multer.File) => file ? unlink(file.path).catch(() => undefined) : Promise.resolve()

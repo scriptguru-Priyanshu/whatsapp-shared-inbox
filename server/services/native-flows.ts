@@ -8,7 +8,7 @@ export const flowTokenHash = (token: string) => createHash('sha256').update(toke
 export const publicFlow = ({ operationToken: _token, operationUntil: _until, ...flow }: WhatsAppFlow) => flow
 export async function graphFlow(path: string, body?: Record<string, unknown> | FormData, method = body ? 'POST' : 'GET'): Promise<any> {
   let response: Response
-  if (body instanceof FormData) response = await fetch(`https://graph.facebook.com/${process.env.META_GRAPH_API_VERSION || 'v26.0'}${path}`, { method, headers: { Authorization: `Bearer ${required('WHATSAPP_ACCESS_TOKEN')}` }, body, signal: AbortSignal.timeout(30000) })
+  if (body instanceof FormData) response = await fetch(`https://graph.facebook.com/${process.env.META_GRAPH_API_VERSION || 'v26.0'}${path}`, { method, headers: { Authorization: `Bearer ${required('META_SYSTEM_TOKEN')}` }, body, signal: AbortSignal.timeout(30000) })
   else response = await metaFetch(path, { method, ...(body ? { body: JSON.stringify(body) } : {}) })
   const result = await response.json().catch(() => null)
   if (!response.ok || result?.error) throw new FlowError(metaErrorMessage(result?.error), 502)

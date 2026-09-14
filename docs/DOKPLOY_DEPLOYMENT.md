@@ -64,7 +64,7 @@ ADMIN_NAME=Admin
 ADMIN_PASSWORD=strong-production-password
 
 WHATSAPP_VERIFY_TOKEN=random-webhook-verification-value
-WHATSAPP_ACCESS_TOKEN=your-meta-access-token
+META_SYSTEM_TOKEN=your-meta-system-token
 WHATSAPP_PHONE_NUMBER_ID=your-phone-number-id
 WHATSAPP_BUSINESS_ACCOUNT_ID=your-business-account-id
 META_APP_SECRET=your-meta-app-secret

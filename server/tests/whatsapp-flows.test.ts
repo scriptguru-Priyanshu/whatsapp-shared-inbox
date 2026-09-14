@@ -102,8 +102,8 @@ test('appointment endpoint validates sessions, persists confirmation once, handl
 test('Flow lifecycle refuses stale edits and non-admin changes, retains Meta validation and protects remote assets', async t => {
   let flow: any = { id: 'local', metaFlowId: '123', name: 'Form', categories: ['OTHER'], flowJson: blankFlow(), endpointMode: 'NONE', endpointUri: '', status: 'DRAFT', revision: 2, syncedRevision: 2, validationErrors: [], remoteDetails: {} }
   let remoteStatus = 'DRAFT', uploadErrors: any[] = [], graphCalls: string[] = [], uploadForm: FormData | undefined, unsafeAsset = false
-  const oldToken = process.env.WHATSAPP_ACCESS_TOKEN; process.env.WHATSAPP_ACCESS_TOKEN = 'fake'
-  t.after(() => { if (oldToken === undefined) delete process.env.WHATSAPP_ACCESS_TOKEN; else process.env.WHATSAPP_ACCESS_TOKEN = oldToken })
+  const oldToken = process.env.META_SYSTEM_TOKEN; process.env.META_SYSTEM_TOKEN = 'fake'
+  t.after(() => { if (oldToken === undefined) delete process.env.META_SYSTEM_TOKEN; else process.env.META_SYSTEM_TOKEN = oldToken })
   replaceMethod(t, prisma.whatsAppFlow, 'findUniqueOrThrow', async () => ({ ...flow }))
   replaceMethod(t, prisma.whatsAppFlow, 'updateMany', async () => ({ count: 1 }))
   replaceMethod(t, prisma.whatsAppFlow, 'update', async (args: any) => { flow = { ...flow, ...args.data, ...(args.data.revision?.increment ? { revision: flow.revision + 1 } : {}) }; return { ...flow } })

@@ -9,8 +9,8 @@ test('template routes validate and upload with mocked Meta, without database or 
   const originalFetch = globalThis.fetch
   const originalFindUnique = prisma.messageTemplate.findUnique, originalUpsert = prisma.messageTemplate.upsert, originalUpdate = prisma.messageTemplate.update
   const originalFindMany = prisma.messageTemplate.findMany
-  const originalEnv = { token: process.env.WHATSAPP_ACCESS_TOKEN, app: process.env.META_APP_ID, waba: process.env.WHATSAPP_BUSINESS_ACCOUNT_ID, phone: process.env.WHATSAPP_PHONE_NUMBER_ID }
-  Object.assign(process.env, { WHATSAPP_ACCESS_TOKEN: 'test-token', META_APP_ID: '123', WHATSAPP_BUSINESS_ACCOUNT_ID: '456', WHATSAPP_PHONE_NUMBER_ID: '789' })
+  const originalEnv = { token: process.env.META_SYSTEM_TOKEN, app: process.env.META_APP_ID, waba: process.env.WHATSAPP_BUSINESS_ACCOUNT_ID, phone: process.env.WHATSAPP_PHONE_NUMBER_ID }
+  Object.assign(process.env, { META_SYSTEM_TOKEN: 'test-token', META_APP_ID: '123', WHATSAPP_BUSINESS_ACCOUNT_ID: '456', WHATSAPP_PHONE_NUMBER_ID: '789' })
   const app = express().use(express.json()).use('/api/templates', templatesRouter)
   const server = app.listen(0, '127.0.0.1')
   await once(server, 'listening')
@@ -116,7 +116,7 @@ test('template routes validate and upload with mocked Meta, without database or 
     prisma.messageTemplate.upsert = originalUpsert
     prisma.messageTemplate.update = originalUpdate
     prisma.messageTemplate.findMany = originalFindMany
-    for (const [key, value] of Object.entries({ WHATSAPP_ACCESS_TOKEN: originalEnv.token, META_APP_ID: originalEnv.app, WHATSAPP_BUSINESS_ACCOUNT_ID: originalEnv.waba, WHATSAPP_PHONE_NUMBER_ID: originalEnv.phone })) { if (value === undefined) delete process.env[key]; else process.env[key] = value }
+    for (const [key, value] of Object.entries({ META_SYSTEM_TOKEN: originalEnv.token, META_APP_ID: originalEnv.app, WHATSAPP_BUSINESS_ACCOUNT_ID: originalEnv.waba, WHATSAPP_PHONE_NUMBER_ID: originalEnv.phone })) { if (value === undefined) delete process.env[key]; else process.env[key] = value }
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()))
   }
 })

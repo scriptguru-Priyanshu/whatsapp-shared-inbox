@@ -54,4 +54,4 @@ Hosted Signup validates the event name, WABA ID, customer business portfolio ID,
 
 Sign in as an administrator, open **Settings**, and select **Continue with Meta**. Complete the hosted flow as an administrator of the business. The connection appears after Meta delivers and Relay processes `PARTNER_ADDED`.
 
-The existing inbox still uses the single `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, and `WHATSAPP_BUSINESS_ACCOUNT_ID` environment configuration. The new connection records establish multi-account onboarding and storage; routing inbox data and outbound messages by clinic requires a clinic/tenant model and is a separate step.
+The existing inbox uses the single `META_SYSTEM_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, and `WHATSAPP_BUSINESS_ACCOUNT_ID` environment configuration. The new connection records establish multi-account onboarding and storage; routing inbox data and outbound messages by clinic requires a clinic/tenant model and is a separate step.

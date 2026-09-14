@@ -22,7 +22,7 @@ whatsappFlowsRouter.get('/setup', requireAdmin, route(async (_req, res) => {
   let publicKey = '', keyError = ''
   try { publicKey = flowPublicKey() } catch (error) { keyError = (error as Error).message.includes('Configure') ? (error as Error).message : 'The configured private key could not be loaded' }
   const endpointUrl = process.env.WHATSAPP_FLOW_ENDPOINT_URL || ''
-  res.json({ publicKey, keyError, endpointUrl, endpointReady: endpointUrl.startsWith('https://') && !!publicKey && !!process.env.META_APP_SECRET, metaReady: !!process.env.WHATSAPP_ACCESS_TOKEN && !!process.env.WHATSAPP_BUSINESS_ACCOUNT_ID && !!process.env.WHATSAPP_PHONE_NUMBER_ID, timezone: process.env.APPOINTMENT_TIMEZONE || 'Asia/Kolkata' })
+  res.json({ publicKey, keyError, endpointUrl, endpointReady: endpointUrl.startsWith('https://') && !!publicKey && !!process.env.META_APP_SECRET, metaReady: !!process.env.META_SYSTEM_TOKEN && !!process.env.WHATSAPP_BUSINESS_ACCOUNT_ID && !!process.env.WHATSAPP_PHONE_NUMBER_ID, timezone: process.env.APPOINTMENT_TIMEZONE || 'Asia/Kolkata' })
 }))
 whatsappFlowsRouter.post('/setup/register-key', requireAdmin, route(async (_req, res) => {
   const result = await graphFlow(`/${required('WHATSAPP_PHONE_NUMBER_ID')}/whatsapp_business_encryption`, { business_public_key: flowPublicKey() })

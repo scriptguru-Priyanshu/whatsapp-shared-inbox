@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
+import { resolve } from 'node:path'
 import { conversationsRouter } from './routes/conversations.js'
 import { contactsRouter } from './routes/contacts.js'
 import { systemRouter } from './routes/system.js'
@@ -52,6 +53,13 @@ app.use('/api/templates', templatesRouter)
 app.use('/api/automations', automationsRouter)
 app.use('/api/whatsapp-flows', whatsappFlowsRouter)
 app.use('/api/whatsapp-connections', whatsappConnectionsRouter)
+
+const frontendDirectory = resolve(process.cwd(), 'dist')
+app.use(express.static(frontendDirectory))
+app.use((req, res, next) => {
+  if (req.method !== 'GET' || req.path.startsWith('/api/')) return next()
+  res.sendFile(resolve(frontendDirectory, 'index.html'))
+})
 
 async function start() {
   const email = (process.env.ADMIN_EMAIL || 'admin@relay.local').toLowerCase()
