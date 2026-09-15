@@ -21,7 +21,7 @@ export function metaFetch(path: string, init: RequestInit = {}) {
 
 export function metaErrorMessage(error: any) {
   if (!error) return 'Meta rejected the request'
-  const parts = [error.error_user_title, error.error_user_msg, error.message].filter(Boolean)
+  const parts = [error.error_user_title, error.error_user_msg, error.error_data?.details, error.message].filter(Boolean)
   const code = error.code ? `Meta code ${error.code}${error.error_subcode ? `/${error.error_subcode}` : ''}` : ''
   return [...new Set(parts), code].filter(Boolean).join(' — ')
 }
