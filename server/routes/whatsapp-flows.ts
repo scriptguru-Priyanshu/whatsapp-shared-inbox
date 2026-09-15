@@ -151,6 +151,6 @@ whatsappFlowsRouter.post('/:id/send', route(async (req, res) => {
   const data = req.body.data ?? {}
   if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 10000) throw new FlowError('Opening screen data must be an object under 10 KB')
   const token = flow.endpointMode === 'EXTERNAL' ? req.body.externalToken : await issueFlowSession(flow, conversation.id, conversation.contactId)
-  const parameters = { flow_message_version: '3', flow_id: flow.metaFlowId, flow_token: token, flow_cta: cta, mode: draft ? 'draft' : 'published', flow_action: flow.endpointMode !== 'NONE' ? 'data_exchange' : 'navigate', ...(flow.endpointMode === 'NONE' ? { flow_action_payload: { screen, data } } : {}) }
+  const parameters = { flow_message_version: '3', flow_id: flow.metaFlowId, flow_token: token, flow_cta: cta, mode: draft ? 'draft' : 'published', flow_action: flow.endpointMode !== 'NONE' ? 'data_exchange' : 'navigate', ...(flow.endpointMode === 'NONE' ? { flow_action_payload: { screen, ...(Object.keys(data).length ? { data } : {}) } } : {}) }
   res.status(201).json(await sendInteractiveAndStore(conversation.id, conversation.contact.waId, { type: 'flow', body: { text: body }, action: { name: 'flow', parameters } }, `${body}\n[${cta}]`))
 }))
