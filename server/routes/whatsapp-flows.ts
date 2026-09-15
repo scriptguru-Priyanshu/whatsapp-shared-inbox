@@ -6,12 +6,13 @@ import { canonicalFlowJson, FlowError, isEditableFlow, validateFlowInput, valida
 import { assertFlowRevision, downloadFlowJson, effectiveEndpoint, flowForm, graphFlow, issueFlowSession, publicFlow, refreshFlow, uploadFlow, withFlowLock } from '../services/native-flows.js'
 import { flowPublicKey } from '../services/flow-crypto.js'
 import { required } from '../services/meta.js'
-import { sendInteractiveAndStore } from '../services/messaging.js'
+import { sendInteractiveAndStore, WhatsAppSendError } from '../services/messaging.js'
 
 export const whatsappFlowsRouter = Router()
 const route = (fn: (req: AuthRequest, res: any) => Promise<any>) => async (req: AuthRequest, res: any) => {
   try { await fn(req, res) } catch (error) {
     if (error instanceof FlowError) return res.status(error.status).json({ error: error.message })
+    if (error instanceof WhatsAppSendError) return res.status(502).json({ error: error.message })
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') return res.status(404).json({ error: 'Flow not found' })
     console.error('Flow operation failed', { code: (error as any)?.code || 'INTERNAL_ERROR' })
     res.status(500).json({ error: 'Unable to complete the Flow operation. Check configuration and refresh before retrying.' })

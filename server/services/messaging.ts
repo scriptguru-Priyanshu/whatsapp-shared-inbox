@@ -3,6 +3,8 @@ import { variableKeys } from '../../shared/templates.js'
 import { prisma } from '../db.js'
 import { metaErrorMessage, metaFetch, required, templateBody } from './meta.js'
 
+export class WhatsAppSendError extends Error {}
+
 export function messageBody(message: any) {
   if (message.interactive?.nfm_reply) return message.text?.body || 'Flow completed'
   if (message.type === 'text') return message.text?.body
@@ -35,7 +37,7 @@ export async function sendTemplateAndStore(conversationId: string, waId: string,
   const rendered = template.category === 'AUTHENTICATION' ? `Authentication code: ${parameters[0]}` : keys.reduce((text, key, index) => text.replaceAll(`{{${key}}}`, parameters[index]), bodyText)
   const response = await metaFetch(`/${required('WHATSAPP_PHONE_NUMBER_ID')}/messages`, { method: 'POST', body: JSON.stringify(payload) })
   const result: any = await response.json()
-  if (!response.ok) throw new Error(metaErrorMessage(result.error))
+  if (!response.ok) throw new WhatsAppSendError(metaErrorMessage(result.error))
   const now = new Date()
   const snapshot = structuredClone(options)
   for (const button of Object.values(snapshot.buttons || {})) delete button.flowToken
@@ -50,7 +52,7 @@ async function sendWhatsAppAndStore(conversationId: string, waId: string, conten
     body: JSON.stringify({ messaging_product: 'whatsapp', recipient_type: 'individual', to: waId, ...content }),
   })
   const result: any = await response.json()
-  if (!response.ok) throw new Error(metaErrorMessage(result.error))
+  if (!response.ok) throw new WhatsAppSendError(metaErrorMessage(result.error))
   const now = new Date()
   const message = await prisma.message.create({ data: { conversationId, metaMessageId: result.messages?.[0]?.id, direction: 'OUTBOUND', type: content.type, body, status: 'SENT', sentAt: now } })
   await prisma.conversation.update({ where: { id: conversationId }, data: { lastMessageAt: now } })
