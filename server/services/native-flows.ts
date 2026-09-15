@@ -76,7 +76,8 @@ export async function downloadFlowJson(metaFlowId: string) {
   const asset = assets.data?.find((item: any) => item.asset_type === 'FLOW_JSON')
   if (!asset) throw new FlowError('This Meta Flow has no uploaded JSON asset', 409)
   const url = new URL(asset.download_url)
-  if (url.protocol !== 'https:' || url.username || url.password || !(url.hostname.endsWith('.fbcdn.net') || url.hostname.endsWith('.facebook.com'))) throw new FlowError('Meta returned an unsupported asset host', 502)
+  const trustedAssetHost = url.hostname === 'mmg.whatsapp.net' || url.hostname.endsWith('.fbcdn.net') || url.hostname.endsWith('.facebook.com')
+  if (url.protocol !== 'https:' || url.username || url.password || !trustedAssetHost) throw new FlowError('Meta returned an unsupported asset host', 502)
   const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(15000) })
   if (!response.ok || !response.body) throw new FlowError('Unable to download Flow JSON', 502)
   let size = 0; const chunks: Uint8Array[] = []
