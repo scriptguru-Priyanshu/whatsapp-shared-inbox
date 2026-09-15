@@ -15,6 +15,11 @@ export async function graphFlow(path: string, body?: Record<string, unknown> | F
   if (!result || typeof result !== 'object') throw new FlowError('Meta returned an incomplete response. Refresh the Flow before retrying.', 502)
   return result
 }
+export function flowForm(fields: Record<string, string | string[]>) {
+  const form = new FormData()
+  for (const [key, value] of Object.entries(fields)) form.set(key, Array.isArray(value) ? JSON.stringify(value) : value)
+  return form
+}
 export function assertFlowRevision(flow: WhatsAppFlow, revision: unknown) {
   if (!Number.isInteger(revision) || revision !== flow.revision) throw new FlowError('This Flow has changed. Reload it before saving or publishing.', 409)
 }
@@ -42,7 +47,7 @@ export async function uploadFlow(flow: WhatsAppFlow) {
   validateFlowInput(flow as unknown as FlowInput)
   if (flow.metaFlowId) flow = await refreshFlow(flow)
   if (!isEditableFlow(flow.status)) throw new FlowError('Published Flows cannot be edited. Make a copy to create a new version.', 409)
-  const metadata = { name: flow.name, categories: flow.categories, ...(flow.endpointMode !== 'NONE' ? { endpoint_uri: effectiveEndpoint(flow) } : flow.metaFlowId ? { endpoint_uri: '' } : {}) }
+  const metadata = flowForm({ name: flow.name, categories: flow.categories as string[], ...(flow.endpointMode !== 'NONE' ? { endpoint_uri: effectiveEndpoint(flow) } : flow.metaFlowId ? { endpoint_uri: '' } : {}) })
   if (!flow.metaFlowId) {
     const remote = await graphFlow(`/${required('WHATSAPP_BUSINESS_ACCOUNT_ID')}/flows`, metadata)
     if (!remote.id) throw new FlowError('Meta did not return a Flow ID. Sync from Meta before retrying.', 502)

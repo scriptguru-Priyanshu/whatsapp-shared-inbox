@@ -7,11 +7,17 @@ import { handleBookingExchange, flowCompletionBody, validateBookingDetails } fro
 import { prisma } from '../db.js'
 import { flowDataEndpoint } from '../routes/flow-endpoint.js'
 import { whatsappFlowsRouter } from '../routes/whatsapp-flows.js'
-import { flowTokenHash, uploadFlow, downloadFlowJson } from '../services/native-flows.js'
+import { flowForm, flowTokenHash, uploadFlow, downloadFlowJson } from '../services/native-flows.js'
 
 function replaceMethod(t: any, target: any, name: string, replacement: any) { const original = target[name]; target[name] = replacement; t.after(() => { target[name] = original }) }
 
 const draft = (): FlowInput => ({ name: 'Appointments', categories: ['APPOINTMENT_BOOKING'], flowJson: appointmentFlow(), endpointMode: 'APPOINTMENT', endpointUri: '' })
+test('Meta Flow form fields use the documented multipart encoding', () => {
+  const form = flowForm({ name: 'Patient intake', categories: ['CONTACT_US', 'OTHER'], endpoint_uri: 'https://example.com/flows' })
+  assert.equal(form.get('name'), 'Patient intake')
+  assert.equal(form.get('categories'), '["CONTACT_US","OTHER"]')
+  assert.equal(form.get('endpoint_uri'), 'https://example.com/flows')
+})
 test('guided multi-screen forms carry answers forward and retain custom payload values', () => {
   const doc = blankFlow(), first = doc.screens[0], second = structuredClone(first)
   second.id = 'SECOND'; doc.screens.push(second)

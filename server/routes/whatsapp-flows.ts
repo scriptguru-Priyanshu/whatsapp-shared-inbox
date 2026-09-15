@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '../db.js'
 import { requireAdmin, type AuthRequest } from '../auth.js'
 import { canonicalFlowJson, FlowError, isEditableFlow, validateFlowInput, validateFlowJson, type FlowInput } from '../../shared/whatsapp-flows.js'
-import { assertFlowRevision, downloadFlowJson, effectiveEndpoint, graphFlow, issueFlowSession, publicFlow, refreshFlow, uploadFlow, withFlowLock } from '../services/native-flows.js'
+import { assertFlowRevision, downloadFlowJson, effectiveEndpoint, flowForm, graphFlow, issueFlowSession, publicFlow, refreshFlow, uploadFlow, withFlowLock } from '../services/native-flows.js'
 import { flowPublicKey } from '../services/flow-crypto.js'
 import { required } from '../services/meta.js'
 import { sendInteractiveAndStore } from '../services/messaging.js'
@@ -25,7 +25,7 @@ whatsappFlowsRouter.get('/setup', requireAdmin, route(async (_req, res) => {
   res.json({ publicKey, keyError, endpointUrl, endpointReady: endpointUrl.startsWith('https://') && !!publicKey && !!process.env.META_APP_SECRET, metaReady: !!process.env.META_SYSTEM_TOKEN && !!process.env.WHATSAPP_BUSINESS_ACCOUNT_ID && !!process.env.WHATSAPP_PHONE_NUMBER_ID, timezone: process.env.APPOINTMENT_TIMEZONE || 'Asia/Kolkata' })
 }))
 whatsappFlowsRouter.post('/setup/register-key', requireAdmin, route(async (_req, res) => {
-  const result = await graphFlow(`/${required('WHATSAPP_PHONE_NUMBER_ID')}/whatsapp_business_encryption`, { business_public_key: flowPublicKey() })
+  const result = await graphFlow(`/${required('WHATSAPP_PHONE_NUMBER_ID')}/whatsapp_business_encryption`, flowForm({ business_public_key: flowPublicKey() }))
   if (result.success !== true) throw new FlowError('Meta did not confirm public key registration', 502)
   res.json(result)
 }))
