@@ -28,7 +28,8 @@ export function supportsAutomaticTemplate(template: { components: Component[]; c
     const type = upper(c.type)
     if (type === 'CAROUSEL' || type === 'LIMITED_TIME_OFFER') return true
     if (type === 'HEADER') return upper(c.format) !== 'TEXT' || variableKeys(c.text).length > 0
-    return type === 'BUTTONS' && (c.buttons || []).some((b: Component) => !['URL', 'PHONE_NUMBER', 'QUICK_REPLY'].includes(upper(b.type)))
+    // Managed Flow buttons receive their recipient-specific token on the server.
+    return type === 'BUTTONS' && (c.buttons || []).some((b: Component) => !['URL', 'PHONE_NUMBER', 'QUICK_REPLY', 'FLOW'].includes(upper(b.type)))
   })
 }
 function mediaParameter(header: Component, media?: HeaderMediaInput): Component {

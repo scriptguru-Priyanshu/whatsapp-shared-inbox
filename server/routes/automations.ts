@@ -2,6 +2,7 @@ import { supportsAutomaticTemplate, templateSendFields } from '../../shared/temp
 import { Router } from 'express'
 import { prisma } from '../db.js'
 import { runAutomationFlows } from '../services/automations.js'
+import { validateAutomaticFlowTemplate } from '../services/flow-template.js'
 
 export const automationsRouter = Router()
 const builtInFields = [
@@ -96,6 +97,8 @@ async function saveFlow(req: any, res: any, id?: string) {
     if (!template || template.status !== 'APPROVED') return res.status(400).json({ error: 'Select an approved template' })
     const components = Array.isArray(template.components) ? template.components as any[] : []
     if (!supportsAutomaticTemplate({ ...template, components })) return res.status(400).json({ error: 'This template needs delivery media or interactive values. Send it from the inbox.' })
+    try { await validateAutomaticFlowTemplate(components) }
+    catch (error) { return res.status(400).json({ error: error instanceof Error ? error.message : 'The template Flow button is not available for automation.' }) }
     const required = templateSendFields(components, template.category === 'AUTHENTICATION').length
     if (parameterMappings.length !== required || parameterMappings.some((value: string) => !availableFields.has(value))) return res.status(400).json({ error: `Map all ${required} template parameter${required === 1 ? '' : 's'} to trigger fields` })
   }

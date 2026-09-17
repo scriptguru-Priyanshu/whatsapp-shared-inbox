@@ -103,6 +103,7 @@ test('Flow template creation omits send-time tokens and validates references', (
   assert.equal(payload.components[1].buttons[0].flow_token, undefined)
   const sent = buildSendComponents(payload.components, [], { buttons: { 0: { flowToken: 'session-123', flowData: { patient: 'Asha' } } } })
   assert.deepEqual(sent[0].parameters[0].action, { flow_token: 'session-123', flow_action_data: { patient: 'Asha' } })
+  assert.equal(supportsAutomaticTemplate(payload), true)
   rejects({ ...draft, buttons: [{ ...draft.buttons[0], flowName: 'Book' }] }, 'buttons')
 })
 

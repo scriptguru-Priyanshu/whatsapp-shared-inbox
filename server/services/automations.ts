@@ -1,5 +1,6 @@
 import { prisma } from '../db.js'
 import { sendTemplateAndStore, sendTextAndStore } from './messaging.js'
+import { prepareFlowTemplate } from './flow-template.js'
 
 export async function runAutomationFlows(trigger: string, conversationId: string, waId: string, context: Record<string, string>) {
   const flows = await prisma.automationFlow.findMany({
@@ -15,7 +16,9 @@ export async function runAutomationFlows(trigger: string, conversationId: string
       } else {
         if (!flow.template) throw new Error('The selected template no longer exists')
         const mappings = Array.isArray(flow.parameterMappings) ? flow.parameterMappings.map(String) : []
-        await sendTemplateAndStore(conversationId, waId, flow.template, mappings.map(key => context[key] ?? ''))
+        const components = Array.isArray(flow.template.components) ? flow.template.components as any[] : []
+        const options = await prepareFlowTemplate(conversationId, components, {})
+        await sendTemplateAndStore(conversationId, waId, flow.template, mappings.map(key => context[key] ?? ''), options)
       }
     } catch (error) {
       console.error(`Automation flow ${flow.id} failed:`, error)

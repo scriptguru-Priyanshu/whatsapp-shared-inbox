@@ -8,6 +8,7 @@ import { prisma } from '../db.js'
 import { flowDataEndpoint } from '../routes/flow-endpoint.js'
 import { whatsappFlowsRouter } from '../routes/whatsapp-flows.js'
 import { flowForm, flowTokenHash, uploadFlow, downloadFlowJson } from '../services/native-flows.js'
+import { prepareFlowTemplate, validateAutomaticFlowTemplate } from '../services/flow-template.js'
 
 function replaceMethod(t: any, target: any, name: string, replacement: any) { const original = target[name]; target[name] = replacement; t.after(() => { target[name] = original }) }
 
@@ -47,6 +48,22 @@ test('Flow JSON structural validation preserves advanced components and protects
   broken.routing_model = { WELCOME: ['MISSING'] }; assert.match(validateFlowJson(broken).join(' '), /Invalid route/)
   assert.throws(() => validateBookingDetails({ name: 'Alex', age: '1e2', idLast4: '1234', slotId: 'one' }))
   assert.deepEqual(validateBookingDetails({ name: ' Alex ', age: '0', idLast4: '0012', slotId: 'one' }), { name: 'Alex', age: 0, idLast4: '0012', slotId: 'one' })
+})
+
+test('automatic Flow templates validate their mapping and receive a customer session token', async t => {
+  const managed: any = { id: 'flow', metaFlowId: '123', name: 'Appointments', status: 'PUBLISHED', endpointMode: 'APPOINTMENT' }
+  const components = [{ type: 'BUTTONS', buttons: [{ type: 'FLOW', text: 'Book appointment', flow_id: '123', flow_action: 'data_exchange' }] }]
+  let session: any
+  replaceMethod(t, prisma.whatsAppFlow, 'findUnique', async () => managed)
+  replaceMethod(t, prisma.conversation, 'findUniqueOrThrow', async () => ({ id: 'conversation', contactId: 'contact' }))
+  replaceMethod(t, prisma.whatsAppFlowSession, 'create', async (args: any) => { session = args.data; return args.data })
+  await validateAutomaticFlowTemplate(components)
+  const prepared = await prepareFlowTemplate('conversation', components, {})
+  assert.match(prepared.buttons?.[0].flowToken || '', /^[A-Za-z0-9_-]{43}$/)
+  assert.equal(session.flowId, 'flow')
+  assert.equal(session.contactId, 'contact')
+  managed.endpointMode = 'EXTERNAL'
+  await assert.rejects(validateAutomaticFlowTemplate(components), /locally managed Flow/)
 })
 
 test('Meta encryption round trip, tamper detection, signature and ping', async t => {
